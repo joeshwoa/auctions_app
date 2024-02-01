@@ -1,0 +1,33 @@
+class Auction {
+  Auction(this.id,this.code,this.title,this.description,this.price,this.bestOfferOwner,this.bestOfferPrice,this.remainingTime,this.publisherArea,this.publisherCity,this.publisherName,this.publisherImage,this.category,this.subCategory,this.isCar,this.type,this.carBrand,this.carSubBrand,this.shape,this.model,this.gaz,this.auto,this.sell,this.walkFrom,this.walkTo,this.imagesLoaded,this.imageCaver,this.images,this.cancelOptions,this.winner);
+  String id;
+  String code;
+  String title;
+  String description;
+  double price;
+  String bestOfferOwner;
+  double bestOfferPrice;
+  Duration remainingTime;
+  String publisherName;
+  String publisherArea;
+  String publisherCity;
+  String? publisherImage;
+  String category;
+  String subCategory;
+  bool isCar;
+  String type;
+  String carBrand;
+  String carSubBrand;
+  String shape;
+  String model;
+  String gaz;
+  bool auto;
+  bool sell;
+  int walkFrom;
+  int walkTo;
+  bool imagesLoaded;
+  String? imageCaver;
+  List<String?> images;
+  bool cancelOptions;
+  String winner;
+}
