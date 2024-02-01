@@ -175,6 +175,7 @@ class _MyAuctionsPageState extends State<MyAuctionsPage> {
           if(mounted){
             setState(() {
               cachedImages.add(_model.auctions[i].id);
+              numberOfCachedImages.addAll({_model.auctions[i].id:_model.auctions[i].images.length});
               _model.auctions[i].imagesLoaded = true;
             });
           }

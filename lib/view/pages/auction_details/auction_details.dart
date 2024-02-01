@@ -14,8 +14,14 @@ import 'auction_details_model.dart';
 export 'auction_details_model.dart';
 
 class AuctionDetails extends StatefulWidget {
+<<<<<<< HEAD
   const AuctionDetails({super.key,required this.auction});
   final Auction auction;
+=======
+  const AuctionDetails({super.key,required this.auction,required this.canSoom});
+  final Auction auction;
+  final bool canSoom;
+>>>>>>> 81bd079 (fix problem in image cache and share button function and cancel auction in coming soon and expired auctions)
 
   @override
   State<AuctionDetails> createState() => _AuctionDetailsState();
@@ -1016,7 +1022,11 @@ class _AuctionDetailsState extends State<AuctionDetails> {
                       )
                     ),
                   ),
+<<<<<<< HEAD
                   Padding(
+=======
+                  if(widget.canSoom)Padding(
+>>>>>>> 81bd079 (fix problem in image cache and share button function and cancel auction in coming soon and expired auctions)
                     padding: const EdgeInsetsDirectional.fromSTEB(3, 3, 3, 3),
                     child: Container(
                       width: MediaQuery.sizeOf(context).width * 0.9,

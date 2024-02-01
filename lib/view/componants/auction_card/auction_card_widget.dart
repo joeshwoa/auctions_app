@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter/services.dart';
 import 'package:flutterflow_ui/flutterflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flip_panel_plus/flip_panel_plus.dart';
@@ -8,6 +9,7 @@ import 'package:mazad/api/api_methods/post.dart';
 import 'package:mazad/api/api_paths.dart';
 import 'package:mazad/model/auction_model.dart';
 import 'package:mazad/variable/account_details.dart';
+import 'package:mazad/variable/cached_image.dart';
 import 'package:mazad/view/pages/auction_details/auction_details.dart';
 import 'package:cached_memory_image/cached_memory_image.dart';
 
@@ -142,7 +144,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: true),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -359,7 +361,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                                 ),
                                               ),
                                             )),
-                                    itemCount: widget.auction.images.length,
+                                    itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
                                   ),
                                   Padding(
                                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -386,7 +388,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              for(int i=0;i<widget.auction.images.length;i++)...[
+                              for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
                                   child: CircleAvatar(
@@ -756,7 +758,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: true),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -973,7 +975,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                                 ),
                                               ),
                                             )),
-                                    itemCount: widget.auction.images.length,
+                                    itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
                                   ),
                                   Padding(
                                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -1000,7 +1002,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              for(int i=0;i<widget.auction.images.length;i++)...[
+                              for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
                                   child: CircleAvatar(
@@ -1370,7 +1372,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: false),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -1587,7 +1589,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                                 ),
                                               ),
                                             )),
-                                    itemCount: widget.auction.images.length,
+                                    itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
                                   ),
                                   Padding(
                                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -1614,7 +1616,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              for(int i=0;i<widget.auction.images.length;i++)...[
+                              for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
                                   child: CircleAvatar(
@@ -1988,7 +1990,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: true),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -2050,7 +2052,25 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                         size: 24,
                       ),
                       onPressed: () {
-                        //print('IconButton pressed ...');
+                        Clipboard.setData(ClipboardData(
+                            text: widget.auction.title));
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Center(child: Text(
+                                'تم نسخ عنوان المزاد قم بنشره الان',
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
+                                    .override(
+                                  fontFamily: 'Readex Pro',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),),
+                              backgroundColor: const Color(0xff1c6166),
+                              showCloseIcon: true,
+                            ),
+                          );
+                        }
                       },
                     ),
                     Container(
@@ -2220,7 +2240,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                                 ),
                                               ),
                                             )),
-                                    itemCount: widget.auction.images.length,
+                                    itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
                                   ),
                                   Padding(
                                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -2247,7 +2267,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              for(int i=0;i<widget.auction.images.length;i++)...[
+                              for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
                                   child: CircleAvatar(
@@ -2613,7 +2633,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: true),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -2830,7 +2850,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                                 ),
                                               ),
                                             )),
-                                    itemCount: widget.auction.images.length,
+                                    itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
                                   ),
                                   Padding(
                                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -2857,7 +2877,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              for(int i=0;i<widget.auction.images.length;i++)...[
+                              for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
                                   child: CircleAvatar(
@@ -3227,7 +3247,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: false),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -3289,7 +3309,25 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                         size: 24,
                       ),
                       onPressed: () {
-                        print('IconButton pressed ...');
+                        Clipboard.setData(ClipboardData(
+                            text: widget.auction.title));
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Center(child: Text(
+                                'تم نسخ عنوان المزاد قم بنشره الان',
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
+                                    .override(
+                                  fontFamily: 'Readex Pro',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),),
+                              backgroundColor: const Color(0xff1c6166),
+                              showCloseIcon: true,
+                            ),
+                          );
+                        }
                       },
                     ),
                     Container(
@@ -3459,7 +3497,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                                 ),
                                               ),
                                             )),
-                                    itemCount: widget.auction.images.length,
+                                    itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
                                   ),
                                   Padding(
                                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -3486,7 +3524,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              for(int i=0;i<widget.auction.images.length;i++)...[
+                              for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
                                   child: CircleAvatar(
@@ -3842,7 +3880,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: false),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -3904,7 +3942,25 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                         size: 24,
                       ),
                       onPressed: () {
-                        print('IconButton pressed ...');
+                        Clipboard.setData(ClipboardData(
+                            text: widget.auction.title));
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Center(child: Text(
+                                'تم نسخ عنوان المزاد قم بنشره الان',
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
+                                    .override(
+                                  fontFamily: 'Readex Pro',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),),
+                              backgroundColor: const Color(0xff1c6166),
+                              showCloseIcon: true,
+                            ),
+                          );
+                        }
                       },
                     ),
                     Container(
@@ -4074,7 +4130,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                                 ),
                                               ),
                                             )),
-                                    itemCount: widget.auction.images.length,
+                                    itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
                                   ),
                                   Padding(
                                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -4101,7 +4157,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              for(int i=0;i<widget.auction.images.length;i++)...[
+                              for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
                                   child: CircleAvatar(
@@ -4457,7 +4513,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: false),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -4519,7 +4575,25 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                         size: 24,
                       ),
                       onPressed: () {
-                        print('IconButton pressed ...');
+                        Clipboard.setData(ClipboardData(
+                            text: widget.auction.title));
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Center(child: Text(
+                                'تم نسخ عنوان المزاد قم بنشره الان',
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
+                                    .override(
+                                  fontFamily: 'Readex Pro',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),),
+                              backgroundColor: const Color(0xff1c6166),
+                              showCloseIcon: true,
+                            ),
+                          );
+                        }
                       },
                     ),
                     Container(
@@ -4689,7 +4763,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                                 ),
                                               ),
                                             )),
-                                    itemCount: widget.auction.images.length,
+                                    itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
                                   ),
                                   Padding(
                                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -4716,7 +4790,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              for(int i=0;i<widget.auction.images.length;i++)...[
+                              for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
                                   child: CircleAvatar(
