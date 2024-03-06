@@ -551,7 +551,7 @@ class _AdditionInformationDialogWidgetState
               ),
               FFButtonWidget(
                 onPressed: () {
-                  print('Button pressed ...');
+                  Navigator.pop(context);
                 },
                 text: 'تطبيق',
                 icon: const Icon(

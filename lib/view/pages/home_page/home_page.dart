@@ -1,4 +1,5 @@
 import 'package:flutterflow_ui/flutterflow_ui.dart';
+import 'package:cache_manager/cache_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mazad/api/api_methods/get.dart';
@@ -172,6 +173,8 @@ class _HomePageState extends State<HomePage> {
           }
           if(mounted){
             setState(() {
+              WriteCache.setString(key: '${_model.auctions[i].id}/coverImage',value: _model.auctions[i].publisherImage!);
+              WriteCache.setListString(key: '${_model.auctions[i].id}/images',value: _model.auctions[i].images);
               cachedImages.add(_model.auctions[i].id);
               numberOfCachedImages.addAll({_model.auctions[i].id:_model.auctions[i].images.length});
               _model.auctions[i].imagesLoaded = true;

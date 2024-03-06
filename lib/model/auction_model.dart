@@ -11,7 +11,7 @@ class Auction {
   String publisherName;
   String publisherArea;
   String publisherCity;
-  String? publisherImage;
+  String publisherImage;
   String category;
   String subCategory;
   bool isCar;
@@ -26,8 +26,8 @@ class Auction {
   int walkFrom;
   int walkTo;
   bool imagesLoaded;
-  String? imageCaver;
-  List<String?> images;
+  String imageCaver;
+  List<String> images;
   bool cancelOptions;
   String winner;
 }

@@ -6,7 +6,7 @@ Auction createAuction(Map<String, dynamic> json) {
   final String code = json['code'] != null?json['code'].toString():'';
   final String title = json['title']??'';
   final String description = json['description']??'';
-  final double price = json['price']*1.0??0;
+  final double price = json['price'] != null?json['price']*1.0:0;
   final String bestOfferOwner = json['bestOfferOwner']??'';
   final double bestOfferPrice = json['bestOffer'] != null?json['bestOffer']*1.0:price;
   final bool isCar = json['isCar']??false;
@@ -25,8 +25,12 @@ Auction createAuction(Map<String, dynamic> json) {
   final String publisherArea = json['user']['area']??'';
   final String publisherCity = json['user']['city']??'';
   final String publisherName = json['user']['name']??'';
-  final DateTime time = json['remainingTime']!=null?DateTime.parse(json['remainingTime']):DateTime.now();
-  final Duration remainingTime = Duration(days: time.day, hours: time.hour, minutes: time.minute, seconds: time.second);
+  final DateTime time = json['remainingDate']!=null?DateTime.parse(json['remainingDate']):DateTime.now();
+  final int remainingMinutes = json['remainingMin']??0;
+  final int remainingHours = json['remainingHours']??0;
+  final int remainingDays = json['remainingDays']??0;
+  print(json['remainingDays'].toString()+','+json['remainingHours'].toString()+','+json['remainingMin'].toString());
+  final Duration remainingTime = Duration(days: remainingDays, hours: remainingHours, minutes: remainingMinutes);
   final bool cancelOptions = json['cancel']??false;
   final String winner = json['winner'] != null?json['winner']['name']:'';
 

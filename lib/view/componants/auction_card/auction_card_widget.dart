@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cache_manager/cache_manager.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/services.dart';
 import 'package:flutterflow_ui/flutterflow_ui.dart';
@@ -11,7 +13,6 @@ import 'package:mazad/model/auction_model.dart';
 import 'package:mazad/variable/account_details.dart';
 import 'package:mazad/variable/cached_image.dart';
 import 'package:mazad/view/pages/auction_details/auction_details.dart';
-import 'package:cached_memory_image/cached_memory_image.dart';
 
 import 'auction_card_model.dart';
 export 'auction_card_model.dart';
@@ -43,6 +44,9 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
   int imageNumber = 0;
 
   bool sending = false;
+  
+  late List<String> images = [];
+  late String coverImage = '';
 
   @override
   void setState(VoidCallback callback) {
@@ -55,6 +59,20 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
     super.initState();
     _model = createModel(context, () => AuctionCardModel());
 
+    if(cachedImages.contains(widget.auction.id)) {
+      ReadCache.getString(key: '${widget.auction.id}/coverImage').then((value) {
+        setState(() {
+          coverImage = value;
+        });
+      });
+
+      ReadCache.getStringList(key: '${widget.auction.id}/images').then((value) {
+        setState(() {
+          images = value;
+        });
+      });
+    }
+    
     WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
   }
 
@@ -144,7 +162,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: true),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: true,coverImage: coverImage,images: images),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -272,23 +290,39 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                       ),
-                      child: widget.auction.imagesLoaded?CachedMemoryImage(
-                        uniqueKey: 'app://image/${widget.auction.id}/publisherImage/1',
-                        errorWidget: Image.asset(
-                          'assets/images/man.png',
-                          fit: BoxFit.cover,
+                      child: coverImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(coverImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        base64: widget.auction.publisherImage,
-                        placeholder: SizedBox(
-                            height: MediaQuery.sizeOf(context).height * 0.1,
-                            width: MediaQuery.sizeOf(context).height * 0.1,
-                            child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                      ):widget.auction.images.isNotEmpty && widget.auction.publisherImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(widget.auction.publisherImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        fit: BoxFit.cover,
-                      ) : SizedBox(
+                      ):SizedBox(
                           height: MediaQuery.sizeOf(context).height * 0.1,
                           width: MediaQuery.sizeOf(context).height * 0.1,
-                          child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                          child: Image(
+                              image: AssetImage(
+                                  'assets/images/man.png'
+                              ),
+                              fit: BoxFit.cover
+                          )
                       ),
                     ),
                   ],
@@ -340,25 +374,37 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                     itemBuilder: (BuildContext context, int itemIndex, int pageViewIndex) =>
                                         SizedBox.expand(
                                             child: InteractiveViewer(
-                                              child: ClipRRect(
+                                              child: images.isNotEmpty?ClipRRect(
                                                 borderRadius: BorderRadius.circular(8),
-                                                child: widget.auction.imagesLoaded?CachedMemoryImage(
-                                                  uniqueKey: 'app://image/${widget.auction.id}/images/$itemIndex',
-                                                  errorWidget: const Icon(Icons.broken_image_rounded),
-                                                  base64:  widget.auction.images.isNotEmpty?widget.auction.images[itemIndex]:null,
-                                                  placeholder: SizedBox(
-                                                      height: MediaQuery.sizeOf(context).height * 0.1,
-                                                      width: MediaQuery.sizeOf(context).height * 0.1,
-                                                      child: const CircularProgressIndicator(color: Color(0xff1c6166),)
-                                                  ),
+                                                child: SizedBox(
                                                   width: MediaQuery.sizeOf(context).width * 0.18,
                                                   height: MediaQuery.sizeOf(context).width * 0.18,
-                                                  fit: BoxFit.cover,
-                                                ) : SizedBox(
-                                                    height: MediaQuery.sizeOf(context).height * 0.1,
-                                                    width: MediaQuery.sizeOf(context).height * 0.1,
-                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
                                                 ),
+                                              ):widget.auction.images.isNotEmpty?ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: SizedBox(
+                                                  width: MediaQuery.sizeOf(context).width * 0.18,
+                                                  height: MediaQuery.sizeOf(context).width * 0.18,
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(widget.auction.images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
+                                                ),
+                                              ):SizedBox(
+                                                  height: MediaQuery.sizeOf(context).height * 0.1,
+                                                  width: MediaQuery.sizeOf(context).height * 0.1,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),),
+                                                  )
                                               ),
                                             )),
                                     itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
@@ -388,6 +434,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              if(numberOfCachedImages[widget.auction.id] != null) 
                               for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
@@ -758,7 +805,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: true),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: true,coverImage: coverImage,images: images),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -831,7 +878,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                   padding:
                                   const EdgeInsetsDirectional.fromSTEB(2, 2, 2, 2),
                                   child: Text(
-                                    'CA123456',
+                                    widget.auction.code,
                                     textAlign: TextAlign.end,
                                     style: FlutterFlowTheme.of(context)
                                         .bodyMedium
@@ -886,23 +933,39 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                       ),
-                      child: widget.auction.imagesLoaded?CachedMemoryImage(
-                        uniqueKey: 'app://image/${widget.auction.id}/publisherImage/1',
-                        errorWidget: Image.asset(
-                          'assets/images/man.png',
-                          fit: BoxFit.cover,
+                      child: coverImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(coverImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        base64: widget.auction.publisherImage,
-                        placeholder: SizedBox(
-                            height: MediaQuery.sizeOf(context).height * 0.1,
-                            width: MediaQuery.sizeOf(context).height * 0.1,
-                            child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                      ):widget.auction.images.isNotEmpty && widget.auction.publisherImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(widget.auction.publisherImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        fit: BoxFit.cover,
-                      ) : SizedBox(
+                      ):SizedBox(
                           height: MediaQuery.sizeOf(context).height * 0.1,
                           width: MediaQuery.sizeOf(context).height * 0.1,
-                          child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                          child: Image(
+                              image: AssetImage(
+                                  'assets/images/man.png'
+                              ),
+                              fit: BoxFit.cover
+                          )
                       ),
                     ),
                   ],
@@ -954,27 +1017,40 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                     itemBuilder: (BuildContext context, int itemIndex, int pageViewIndex) =>
                                         SizedBox.expand(
                                             child: InteractiveViewer(
-                                              child: ClipRRect(
+                                              child: images.isNotEmpty?ClipRRect(
                                                 borderRadius: BorderRadius.circular(8),
-                                                child: widget.auction.imagesLoaded?CachedMemoryImage(
-                                                  uniqueKey: 'app://image/${widget.auction.id}/images/$itemIndex',
-                                                  errorWidget: const Icon(Icons.broken_image_rounded),
-                                                  base64:  widget.auction.images.isNotEmpty?widget.auction.images[itemIndex]:null,
-                                                  placeholder: SizedBox(
-                                                      height: MediaQuery.sizeOf(context).height * 0.1,
-                                                      width: MediaQuery.sizeOf(context).height * 0.1,
-                                                      child: const CircularProgressIndicator(color: Color(0xff1c6166),)
-                                                  ),
+                                                child: SizedBox(
                                                   width: MediaQuery.sizeOf(context).width * 0.18,
                                                   height: MediaQuery.sizeOf(context).width * 0.18,
-                                                  fit: BoxFit.cover,
-                                                ) : SizedBox(
-                                                    height: MediaQuery.sizeOf(context).height * 0.1,
-                                                    width: MediaQuery.sizeOf(context).height * 0.1,
-                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
                                                 ),
+                                              ):widget.auction.images.isNotEmpty?ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: SizedBox(
+                                                  width: MediaQuery.sizeOf(context).width * 0.18,
+                                                  height: MediaQuery.sizeOf(context).width * 0.18,
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(widget.auction.images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
+                                                ),
+                                              ):SizedBox(
+                                                  height: MediaQuery.sizeOf(context).height * 0.1,
+                                                  width: MediaQuery.sizeOf(context).height * 0.1,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),),
+                                                  )
                                               ),
-                                            )),
+                                            )
+                                        ),
                                     itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
                                   ),
                                   Padding(
@@ -1002,6 +1078,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              if(numberOfCachedImages[widget.auction.id] != null) 
                               for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
@@ -1372,7 +1449,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: false),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: false,coverImage: coverImage,images: images),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -1445,7 +1522,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                   padding:
                                   const EdgeInsetsDirectional.fromSTEB(2, 2, 2, 2),
                                   child: Text(
-                                    'CA123456',
+                                    widget.auction.code,
                                     textAlign: TextAlign.end,
                                     style: FlutterFlowTheme.of(context)
                                         .bodyMedium
@@ -1500,23 +1577,39 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                       ),
-                      child: widget.auction.imagesLoaded?CachedMemoryImage(
-                        uniqueKey: 'app://image/${widget.auction.id}/publisherImage/1',
-                        errorWidget: Image.asset(
-                          'assets/images/man.png',
-                          fit: BoxFit.cover,
+                      child: coverImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(coverImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        base64: widget.auction.publisherImage,
-                        placeholder: SizedBox(
-                            height: MediaQuery.sizeOf(context).height * 0.1,
-                            width: MediaQuery.sizeOf(context).height * 0.1,
-                            child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                      ):widget.auction.images.isNotEmpty && widget.auction.publisherImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(widget.auction.publisherImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        fit: BoxFit.cover,
-                      ) : SizedBox(
+                      ):SizedBox(
                           height: MediaQuery.sizeOf(context).height * 0.1,
                           width: MediaQuery.sizeOf(context).height * 0.1,
-                          child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                          child: Image(
+                              image: AssetImage(
+                                  'assets/images/man.png'
+                              ),
+                              fit: BoxFit.cover
+                          )
                       ),
                     ),
                   ],
@@ -1568,27 +1661,40 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                     itemBuilder: (BuildContext context, int itemIndex, int pageViewIndex) =>
                                         SizedBox.expand(
                                             child: InteractiveViewer(
-                                              child: ClipRRect(
+                                              child: images.isNotEmpty?ClipRRect(
                                                 borderRadius: BorderRadius.circular(8),
-                                                child: widget.auction.imagesLoaded?CachedMemoryImage(
-                                                  uniqueKey: 'app://image/${widget.auction.id}/images/$itemIndex',
-                                                  errorWidget: const Icon(Icons.broken_image_rounded),
-                                                  base64:  widget.auction.images.isNotEmpty?widget.auction.images[itemIndex]:null,
-                                                  placeholder: SizedBox(
-                                                      height: MediaQuery.sizeOf(context).height * 0.1,
-                                                      width: MediaQuery.sizeOf(context).height * 0.1,
-                                                      child: const CircularProgressIndicator(color: Color(0xff1c6166),)
-                                                  ),
+                                                child: SizedBox(
                                                   width: MediaQuery.sizeOf(context).width * 0.18,
                                                   height: MediaQuery.sizeOf(context).width * 0.18,
-                                                  fit: BoxFit.cover,
-                                                ) : SizedBox(
-                                                    height: MediaQuery.sizeOf(context).height * 0.1,
-                                                    width: MediaQuery.sizeOf(context).height * 0.1,
-                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
                                                 ),
+                                              ):widget.auction.images.isNotEmpty?ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: SizedBox(
+                                                  width: MediaQuery.sizeOf(context).width * 0.18,
+                                                  height: MediaQuery.sizeOf(context).width * 0.18,
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(widget.auction.images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
+                                                ),
+                                              ):SizedBox(
+                                                  height: MediaQuery.sizeOf(context).height * 0.1,
+                                                  width: MediaQuery.sizeOf(context).height * 0.1,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),),
+                                                  )
                                               ),
-                                            )),
+                                            )
+                                        ),
                                     itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
                                   ),
                                   Padding(
@@ -1616,6 +1722,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              if(numberOfCachedImages[widget.auction.id] != null) 
                               for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
@@ -1990,7 +2097,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: true),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: true,coverImage: coverImage,images: images),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -2096,7 +2203,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                   padding:
                                   const EdgeInsetsDirectional.fromSTEB(2, 2, 2, 2),
                                   child: Text(
-                                    'CA123456',
+                                    widget.auction.code,
                                     textAlign: TextAlign.end,
                                     style: FlutterFlowTheme.of(context)
                                         .bodyMedium
@@ -2151,23 +2258,39 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                       ),
-                      child: widget.auction.imagesLoaded?CachedMemoryImage(
-                        uniqueKey: 'app://image/${widget.auction.id}/publisherImage/1',
-                        errorWidget: Image.asset(
-                          'assets/images/man.png',
-                          fit: BoxFit.cover,
+                      child: coverImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(coverImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        base64: widget.auction.publisherImage,
-                        placeholder: SizedBox(
-                            height: MediaQuery.sizeOf(context).height * 0.1,
-                            width: MediaQuery.sizeOf(context).height * 0.1,
-                            child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                      ):widget.auction.images.isNotEmpty && widget.auction.publisherImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(widget.auction.publisherImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        fit: BoxFit.cover,
-                      ) : SizedBox(
+                      ):SizedBox(
                           height: MediaQuery.sizeOf(context).height * 0.1,
                           width: MediaQuery.sizeOf(context).height * 0.1,
-                          child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                          child: Image(
+                              image: AssetImage(
+                                  'assets/images/man.png'
+                              ),
+                              fit: BoxFit.cover
+                          )
                       ),
                     ),
                   ],
@@ -2219,25 +2342,37 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                     itemBuilder: (BuildContext context, int itemIndex, int pageViewIndex) =>
                                         SizedBox.expand(
                                             child: InteractiveViewer(
-                                              child: ClipRRect(
+                                              child: images.isNotEmpty?ClipRRect(
                                                 borderRadius: BorderRadius.circular(8),
-                                                child: widget.auction.imagesLoaded?CachedMemoryImage(
-                                                  uniqueKey: 'app://image/${widget.auction.id}/images/$itemIndex',
-                                                  errorWidget: const Icon(Icons.broken_image_rounded),
-                                                  base64:  widget.auction.images.isNotEmpty?widget.auction.images[itemIndex]:null,
-                                                  placeholder: SizedBox(
-                                                      height: MediaQuery.sizeOf(context).height * 0.1,
-                                                      width: MediaQuery.sizeOf(context).height * 0.1,
-                                                      child: const CircularProgressIndicator(color: Color(0xff1c6166),)
-                                                  ),
+                                                child: SizedBox(
                                                   width: MediaQuery.sizeOf(context).width * 0.18,
                                                   height: MediaQuery.sizeOf(context).width * 0.18,
-                                                  fit: BoxFit.cover,
-                                                ) : SizedBox(
-                                                    height: MediaQuery.sizeOf(context).height * 0.1,
-                                                    width: MediaQuery.sizeOf(context).height * 0.1,
-                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
                                                 ),
+                                              ):widget.auction.images.isNotEmpty?ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: SizedBox(
+                                                  width: MediaQuery.sizeOf(context).width * 0.18,
+                                                  height: MediaQuery.sizeOf(context).width * 0.18,
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(widget.auction.images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
+                                                ),
+                                              ):SizedBox(
+                                                  height: MediaQuery.sizeOf(context).height * 0.1,
+                                                  width: MediaQuery.sizeOf(context).height * 0.1,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),),
+                                                  )
                                               ),
                                             )),
                                     itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
@@ -2267,6 +2402,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              if(numberOfCachedImages[widget.auction.id] != null) 
                               for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
@@ -2633,7 +2769,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: true),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: true,coverImage: coverImage,images: images),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -2706,7 +2842,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                   padding:
                                   const EdgeInsetsDirectional.fromSTEB(2, 2, 2, 2),
                                   child: Text(
-                                    'CA123456',
+                                    widget.auction.code,
                                     textAlign: TextAlign.end,
                                     style: FlutterFlowTheme.of(context)
                                         .bodyMedium
@@ -2761,23 +2897,39 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                       ),
-                      child: widget.auction.imagesLoaded?CachedMemoryImage(
-                        uniqueKey: 'app://image/${widget.auction.id}/publisherImage/1',
-                        errorWidget: Image.asset(
-                          'assets/images/man.png',
-                          fit: BoxFit.cover,
+                      child: coverImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(coverImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        base64: widget.auction.publisherImage,
-                        placeholder: SizedBox(
-                            height: MediaQuery.sizeOf(context).height * 0.1,
-                            width: MediaQuery.sizeOf(context).height * 0.1,
-                            child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                      ):widget.auction.images.isNotEmpty && widget.auction.publisherImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(widget.auction.publisherImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        fit: BoxFit.cover,
-                      ) : SizedBox(
+                      ):SizedBox(
                           height: MediaQuery.sizeOf(context).height * 0.1,
                           width: MediaQuery.sizeOf(context).height * 0.1,
-                          child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                          child: Image(
+                              image: AssetImage(
+                                  'assets/images/man.png'
+                              ),
+                              fit: BoxFit.cover
+                          )
                       ),
                     ),
                   ],
@@ -2829,25 +2981,37 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                     itemBuilder: (BuildContext context, int itemIndex, int pageViewIndex) =>
                                         SizedBox.expand(
                                             child: InteractiveViewer(
-                                              child: ClipRRect(
+                                              child: images.isNotEmpty?ClipRRect(
                                                 borderRadius: BorderRadius.circular(8),
-                                                child: widget.auction.imagesLoaded?CachedMemoryImage(
-                                                  uniqueKey: 'app://image/${widget.auction.id}/images/$itemIndex',
-                                                  errorWidget: const Icon(Icons.broken_image_rounded),
-                                                  base64:  widget.auction.images.isNotEmpty?widget.auction.images[itemIndex]:null,
-                                                  placeholder: SizedBox(
-                                                      height: MediaQuery.sizeOf(context).height * 0.1,
-                                                      width: MediaQuery.sizeOf(context).height * 0.1,
-                                                      child: const CircularProgressIndicator(color: Color(0xff1c6166),)
-                                                  ),
+                                                child: SizedBox(
                                                   width: MediaQuery.sizeOf(context).width * 0.18,
                                                   height: MediaQuery.sizeOf(context).width * 0.18,
-                                                  fit: BoxFit.cover,
-                                                ) : SizedBox(
-                                                    height: MediaQuery.sizeOf(context).height * 0.1,
-                                                    width: MediaQuery.sizeOf(context).height * 0.1,
-                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
                                                 ),
+                                              ):widget.auction.images.isNotEmpty?ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: SizedBox(
+                                                  width: MediaQuery.sizeOf(context).width * 0.18,
+                                                  height: MediaQuery.sizeOf(context).width * 0.18,
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(widget.auction.images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
+                                                ),
+                                              ):SizedBox(
+                                                  height: MediaQuery.sizeOf(context).height * 0.1,
+                                                  width: MediaQuery.sizeOf(context).height * 0.1,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),),
+                                                  )
                                               ),
                                             )),
                                     itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
@@ -2877,6 +3041,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              if(numberOfCachedImages[widget.auction.id] != null) 
                               for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
@@ -3247,7 +3412,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: false),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: false,coverImage: coverImage,images: images),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -3353,7 +3518,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                   padding:
                                   const EdgeInsetsDirectional.fromSTEB(2, 2, 2, 2),
                                   child: Text(
-                                    'CA123456',
+                                    widget.auction.code,
                                     textAlign: TextAlign.end,
                                     style: FlutterFlowTheme.of(context)
                                         .bodyMedium
@@ -3408,23 +3573,39 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                       ),
-                      child: widget.auction.imagesLoaded?CachedMemoryImage(
-                        uniqueKey: 'app://image/${widget.auction.id}/publisherImage/1',
-                        errorWidget: Image.asset(
-                          'assets/images/man.png',
-                          fit: BoxFit.cover,
+                      child: coverImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(coverImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        base64: widget.auction.publisherImage,
-                        placeholder: SizedBox(
-                            height: MediaQuery.sizeOf(context).height * 0.1,
-                            width: MediaQuery.sizeOf(context).height * 0.1,
-                            child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                      ):widget.auction.images.isNotEmpty && widget.auction.publisherImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(widget.auction.publisherImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        fit: BoxFit.cover,
-                      ) : SizedBox(
+                      ):SizedBox(
                           height: MediaQuery.sizeOf(context).height * 0.1,
                           width: MediaQuery.sizeOf(context).height * 0.1,
-                          child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                          child: Image(
+                              image: AssetImage(
+                                  'assets/images/man.png'
+                              ),
+                              fit: BoxFit.cover
+                          )
                       ),
                     ),
                   ],
@@ -3476,25 +3657,37 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                     itemBuilder: (BuildContext context, int itemIndex, int pageViewIndex) =>
                                         SizedBox.expand(
                                             child: InteractiveViewer(
-                                              child: ClipRRect(
+                                              child: images.isNotEmpty?ClipRRect(
                                                 borderRadius: BorderRadius.circular(8),
-                                                child: widget.auction.imagesLoaded?CachedMemoryImage(
-                                                  uniqueKey: 'app://image/${widget.auction.id}/images/$itemIndex',
-                                                  errorWidget: const Icon(Icons.broken_image_rounded),
-                                                  base64:  widget.auction.images.isNotEmpty?widget.auction.images[itemIndex]:null,
-                                                  placeholder: SizedBox(
-                                                      height: MediaQuery.sizeOf(context).height * 0.1,
-                                                      width: MediaQuery.sizeOf(context).height * 0.1,
-                                                      child: const CircularProgressIndicator(color: Color(0xff1c6166),)
-                                                  ),
+                                                child: SizedBox(
                                                   width: MediaQuery.sizeOf(context).width * 0.18,
                                                   height: MediaQuery.sizeOf(context).width * 0.18,
-                                                  fit: BoxFit.cover,
-                                                ) : SizedBox(
-                                                    height: MediaQuery.sizeOf(context).height * 0.1,
-                                                    width: MediaQuery.sizeOf(context).height * 0.1,
-                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
                                                 ),
+                                              ):widget.auction.images.isNotEmpty?ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: SizedBox(
+                                                  width: MediaQuery.sizeOf(context).width * 0.18,
+                                                  height: MediaQuery.sizeOf(context).width * 0.18,
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(widget.auction.images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
+                                                ),
+                                              ):SizedBox(
+                                                  height: MediaQuery.sizeOf(context).height * 0.1,
+                                                  width: MediaQuery.sizeOf(context).height * 0.1,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),),
+                                                  )
                                               ),
                                             )),
                                     itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
@@ -3524,6 +3717,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              if(numberOfCachedImages[widget.auction.id] != null) 
                               for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
@@ -3880,7 +4074,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: false),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: false,coverImage: coverImage,images: images),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -3986,7 +4180,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                   padding:
                                   const EdgeInsetsDirectional.fromSTEB(2, 2, 2, 2),
                                   child: Text(
-                                    'CA123456',
+                                    widget.auction.code,
                                     textAlign: TextAlign.end,
                                     style: FlutterFlowTheme.of(context)
                                         .bodyMedium
@@ -4041,23 +4235,39 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                       ),
-                      child: widget.auction.imagesLoaded?CachedMemoryImage(
-                        uniqueKey: 'app://image/${widget.auction.id}/publisherImage/1',
-                        errorWidget: Image.asset(
-                          'assets/images/man.png',
-                          fit: BoxFit.cover,
+                      child: coverImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(coverImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        base64: widget.auction.publisherImage,
-                        placeholder: SizedBox(
-                            height: MediaQuery.sizeOf(context).height * 0.1,
-                            width: MediaQuery.sizeOf(context).height * 0.1,
-                            child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                      ):widget.auction.images.isNotEmpty && widget.auction.publisherImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(widget.auction.publisherImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        fit: BoxFit.cover,
-                      ) : SizedBox(
+                      ):SizedBox(
                           height: MediaQuery.sizeOf(context).height * 0.1,
                           width: MediaQuery.sizeOf(context).height * 0.1,
-                          child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                          child: Image(
+                              image: AssetImage(
+                                  'assets/images/man.png'
+                              ),
+                              fit: BoxFit.cover
+                          )
                       ),
                     ),
                   ],
@@ -4109,25 +4319,37 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                     itemBuilder: (BuildContext context, int itemIndex, int pageViewIndex) =>
                                         SizedBox.expand(
                                             child: InteractiveViewer(
-                                              child: ClipRRect(
+                                              child: images.isNotEmpty?ClipRRect(
                                                 borderRadius: BorderRadius.circular(8),
-                                                child: widget.auction.imagesLoaded?CachedMemoryImage(
-                                                  uniqueKey: 'app://image/${widget.auction.id}/images/$itemIndex',
-                                                  errorWidget: const Icon(Icons.broken_image_rounded),
-                                                  base64:  widget.auction.images.isNotEmpty?widget.auction.images[itemIndex]:null,
-                                                  placeholder: SizedBox(
-                                                      height: MediaQuery.sizeOf(context).height * 0.1,
-                                                      width: MediaQuery.sizeOf(context).height * 0.1,
-                                                      child: const CircularProgressIndicator(color: Color(0xff1c6166),)
-                                                  ),
+                                                child: SizedBox(
                                                   width: MediaQuery.sizeOf(context).width * 0.18,
                                                   height: MediaQuery.sizeOf(context).width * 0.18,
-                                                  fit: BoxFit.cover,
-                                                ) : SizedBox(
-                                                    height: MediaQuery.sizeOf(context).height * 0.1,
-                                                    width: MediaQuery.sizeOf(context).height * 0.1,
-                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
                                                 ),
+                                              ):widget.auction.images.isNotEmpty?ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: SizedBox(
+                                                  width: MediaQuery.sizeOf(context).width * 0.18,
+                                                  height: MediaQuery.sizeOf(context).width * 0.18,
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(widget.auction.images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
+                                                ),
+                                              ):SizedBox(
+                                                  height: MediaQuery.sizeOf(context).height * 0.1,
+                                                  width: MediaQuery.sizeOf(context).height * 0.1,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),),
+                                                  )
                                               ),
                                             )),
                                     itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
@@ -4157,6 +4379,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              if(numberOfCachedImages[widget.auction.id] != null) 
                               for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),
@@ -4513,7 +4736,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
       padding: const EdgeInsetsDirectional.fromSTEB(5, 5, 5, 5),
       child: MaterialButton(
         onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: false),));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AuctionDetails(auction: widget.auction,canSoom: false,coverImage: coverImage,images: images),));
         },
         padding: EdgeInsets.zero,
         child: Container(
@@ -4619,7 +4842,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                   padding:
                                   const EdgeInsetsDirectional.fromSTEB(2, 2, 2, 2),
                                   child: Text(
-                                    'CA123456',
+                                    widget.auction.code,
                                     textAlign: TextAlign.end,
                                     style: FlutterFlowTheme.of(context)
                                         .bodyMedium
@@ -4674,23 +4897,39 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                       ),
-                      child: widget.auction.imagesLoaded?CachedMemoryImage(
-                        uniqueKey: 'app://image/${widget.auction.id}/publisherImage/1',
-                        errorWidget: Image.asset(
-                          'assets/images/man.png',
-                          fit: BoxFit.cover,
+                      child: coverImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(coverImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        base64: widget.auction.publisherImage,
-                        placeholder: SizedBox(
-                            height: MediaQuery.sizeOf(context).height * 0.1,
-                            width: MediaQuery.sizeOf(context).height * 0.1,
-                            child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                      ):widget.auction.images.isNotEmpty && widget.auction.publisherImage.isNotEmpty?ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 0.1,
+                          height: MediaQuery.sizeOf(context).width * 0.1,
+                          child: Image(
+                              image: MemoryImage(
+                                  base64Decode(widget.auction.publisherImage)
+                              ),
+                              fit: BoxFit.cover
+                          ),
                         ),
-                        fit: BoxFit.cover,
-                      ) : SizedBox(
+                      ):SizedBox(
                           height: MediaQuery.sizeOf(context).height * 0.1,
                           width: MediaQuery.sizeOf(context).height * 0.1,
-                          child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                          child: Image(
+                              image: AssetImage(
+                                  'assets/images/man.png'
+                              ),
+                              fit: BoxFit.cover
+                          )
                       ),
                     ),
                   ],
@@ -4742,25 +4981,37 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                                     itemBuilder: (BuildContext context, int itemIndex, int pageViewIndex) =>
                                         SizedBox.expand(
                                             child: InteractiveViewer(
-                                              child: ClipRRect(
+                                              child: images.isNotEmpty?ClipRRect(
                                                 borderRadius: BorderRadius.circular(8),
-                                                child: widget.auction.imagesLoaded?CachedMemoryImage(
-                                                  uniqueKey: 'app://image/${widget.auction.id}/images/$itemIndex',
-                                                  errorWidget: const Icon(Icons.broken_image_rounded),
-                                                  base64:  widget.auction.images.isNotEmpty?widget.auction.images[itemIndex]:null,
-                                                  placeholder: SizedBox(
-                                                      height: MediaQuery.sizeOf(context).height * 0.1,
-                                                      width: MediaQuery.sizeOf(context).height * 0.1,
-                                                      child: const CircularProgressIndicator(color: Color(0xff1c6166),)
-                                                  ),
+                                                child: SizedBox(
                                                   width: MediaQuery.sizeOf(context).width * 0.18,
                                                   height: MediaQuery.sizeOf(context).width * 0.18,
-                                                  fit: BoxFit.cover,
-                                                ) : SizedBox(
-                                                    height: MediaQuery.sizeOf(context).height * 0.1,
-                                                    width: MediaQuery.sizeOf(context).height * 0.1,
-                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),)
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
                                                 ),
+                                              ):widget.auction.images.isNotEmpty?ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: SizedBox(
+                                                  width: MediaQuery.sizeOf(context).width * 0.18,
+                                                  height: MediaQuery.sizeOf(context).width * 0.18,
+                                                  child: Image(
+                                                      image: MemoryImage(
+                                                          base64Decode(widget.auction.images[itemIndex])
+                                                      ),
+                                                      fit: BoxFit.cover
+                                                  ),
+                                                ),
+                                              ):SizedBox(
+                                                  height: MediaQuery.sizeOf(context).height * 0.1,
+                                                  width: MediaQuery.sizeOf(context).height * 0.1,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    child: const CircularProgressIndicator(color: Color(0xff1c6166),),
+                                                  )
                                               ),
                                             )),
                                     itemCount: numberOfCachedImages[widget.auction.id]??widget.auction.images.length,
@@ -4790,6 +5041,7 @@ class _AuctionCardWidgetState extends State<AuctionCardWidget> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              if(numberOfCachedImages[widget.auction.id] != null) 
                               for(int i=0;i<numberOfCachedImages[widget.auction.id]!;i++)...[
                                 Padding(
                                   padding: const EdgeInsets.all(5),

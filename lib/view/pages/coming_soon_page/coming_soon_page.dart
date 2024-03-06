@@ -1,3 +1,4 @@
+import 'package:cache_manager/cache_manager.dart';
 import 'package:flutterflow_ui/flutterflow_ui.dart';
 import 'package:mazad/api/api_methods/get.dart';
 import 'package:mazad/api/api_paths.dart';
@@ -170,6 +171,8 @@ class _ComingSoonPageState extends State<ComingSoonPage> {
           }
           if(mounted){
             setState(() {
+              WriteCache.setString(key: '${_model.auctions[i].id}/coverImage',value: _model.auctions[i].publisherImage!);
+              WriteCache.setListString(key: '${_model.auctions[i].id}/images',value: _model.auctions[i].images);
               cachedImages.add(_model.auctions[i].id);
               numberOfCachedImages.addAll({_model.auctions[i].id:_model.auctions[i].images.length});
               _model.auctions[i].imagesLoaded = true;

@@ -443,8 +443,8 @@ class _MyWalletState extends State<MyWallet> {
                                                                     .circular(
                                                                     6),
                                                                 child:
-                                                                Image.network(
-                                                                  'https://picsum.photos/seed/260/600',
+                                                                Image.asset(
+                                                                  'assets/images/full-m2i8m2i8i8Z5Z5m2.png',
                                                                   width: MediaQuery
                                                                       .sizeOf(
                                                                       context)
@@ -455,7 +455,7 @@ class _MyWalletState extends State<MyWallet> {
                                                                       context)
                                                                       .height *
                                                                       0.05,
-                                                                  fit: BoxFit.cover,
+                                                                  fit: BoxFit.fitWidth,
                                                                 ),
                                                               ),
                                                             ),
@@ -600,8 +600,8 @@ class _MyWalletState extends State<MyWallet> {
                                                                     .circular(
                                                                     6),
                                                                 child:
-                                                                Image.network(
-                                                                  'https://picsum.photos/seed/480/600',
+                                                                Image.asset(
+                                                                  'assets/images/366497.png',
                                                                   width: MediaQuery
                                                                       .sizeOf(
                                                                       context)
@@ -612,7 +612,7 @@ class _MyWalletState extends State<MyWallet> {
                                                                       context)
                                                                       .height *
                                                                       0.05,
-                                                                  fit: BoxFit.cover,
+                                                                  fit: BoxFit.fitWidth,
                                                                 ),
                                                               ),
                                                             ),
@@ -757,8 +757,8 @@ class _MyWalletState extends State<MyWallet> {
                                                                     .circular(
                                                                     6),
                                                                 child:
-                                                                Image.network(
-                                                                  'https://picsum.photos/seed/360/600',
+                                                                Image.asset(
+                                                                  'assets/images/366974.png',
                                                                   width: MediaQuery
                                                                       .sizeOf(
                                                                       context)
@@ -769,7 +769,7 @@ class _MyWalletState extends State<MyWallet> {
                                                                       context)
                                                                       .height *
                                                                       0.05,
-                                                                  fit: BoxFit.cover,
+                                                                  fit: BoxFit.fitWidth,
                                                                 ),
                                                               ),
                                                             ),
@@ -931,7 +931,7 @@ class _MyWalletState extends State<MyWallet> {
                                     padding:
                                     const EdgeInsetsDirectional.fromSTEB(3, 3, 3, 3),
                                     child: Text(
-                                      'Apple Pay',
+                                      method == 0?'Apple Pay':method == 1?'STC Pay':'بطاقة ائتمان',
                                       style: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
@@ -959,15 +959,15 @@ class _MyWalletState extends State<MyWallet> {
                                         ),
                                         child: ClipRRect(
                                           borderRadius: BorderRadius.circular(6),
-                                          child: Image.network(
-                                            'https://picsum.photos/seed/360/600',
+                                          child: Image.asset(
+                                            method == 0?'assets/images/full-m2i8m2i8i8Z5Z5m2.png':method == 1?'assets/images/366497.png':'assets/images/366974.png',
                                             width:
                                             MediaQuery.sizeOf(context).width *
                                                 0.2,
                                             height:
                                             MediaQuery.sizeOf(context).height *
                                                 0.04,
-                                            fit: BoxFit.cover,
+                                            fit: BoxFit.fitWidth,
                                           ),
                                         ),
                                       ),
@@ -1176,14 +1176,14 @@ class _MyWalletState extends State<MyWallet> {
                                       children: [
                                         ClipRRect(
                                           borderRadius: BorderRadius.circular(8),
-                                          child: Image.network(
-                                            'https://picsum.photos/seed/9/600',
+                                          child: Image.asset(
+                                            method == 0?'assets/images/full-m2i8m2i8i8Z5Z5m2 - Copy.png':method == 1?'assets/images/366497.png':'assets/images/366974.png',
                                             width: MediaQuery.sizeOf(context).width *
                                                 0.18,
                                             height:
                                             MediaQuery.sizeOf(context).height *
                                                 0.04,
-                                            fit: BoxFit.cover,
+                                            fit: BoxFit.fitWidth,
                                           ),
                                         ),
                                         Text(
